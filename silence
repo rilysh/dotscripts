@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+help() {
+    echo "silence - Run programs without getting stdout or stderr as an output
+Parameter
+    [PROGRAM] - Name of the program to run
+"
+    exit 0
+}
+
+[ ! "$1" ] && {
+    echo "Error: Please provide a program path. For more info run ${0##*/} --help"
+    exit 1
+}
+
+# Check if the script run with root priviledge
+[ $(id -u) = 0 ] && echo "Warning: $1 was run with root priviledge"
+
+# Help command
+case "$1" in --h|--help) help ;; esac
+
+/usr/bin/nohup $1 </dev/null >/dev/null 2>&1 &
