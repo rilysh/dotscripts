@@ -1,0 +1,15 @@
+PROGRAM=Sonic Robo Burst
+VERSION=latest
+REPO=https://github.com/STJr/SRB2
+DEPENDS=SDL2-devel SDL2_mixer-devel libopenmpt-devel libgme-devel make gcc
+HASHCHECK=no
+HOMEPAGE=https://www.srb2.org/
+MAINTAINER=rilysh
+RUN=cd SRB2 && make
+DESCRIPTION=SRB2 2.2 Public 
+LICENSE=GPL-2.0
+
+COMMENT: Run repkg with this template and soon after you'll get a folder called "bin"
+COMMENT: Go to this "bin" folder and copy all game data to here.
+COMMENT: You need to download Windows version (zip packed) and copy all game data to this bin directory.
+COMMENT: For source, see https://github.com/STJr/SRB2
