@@ -172,6 +172,16 @@ sudo xbps-install -S gvfs
 sudo xbps-install -S gvfs-mtp
 ```
 
+##### Support webp thumbnail
+Xfce and Thunar can't recognize webp format images.
+```sh
+# Install webp devel (included webp format and development libs)
+sudo xbps-install -S libwebp-devel
+
+# Install webp-pixel-buffer loader
+sudo xbps-install -S webp-pixbuf-loader
+```
+
 ##### Disable BTRFS and LVM (advanced)
 If you didn't setup BTRFS or LVM on installation or don't want used BTRFS file system anywhere nor LVM, you can remove both of them to reduce boot time.
 ```sh
