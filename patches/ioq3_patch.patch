@@ -1,0 +1,251 @@
+# Note: This patch isn't an official one, so try on your own risk!
+
+diff --git a/Makefile b/Makefile
+index 8fa0fda..7c4c917 100644
+--- a/Makefile
++++ b/Makefile
+@@ -209,7 +209,7 @@ USE_AUTOUPDATER=0
+ endif
+ 
+ ifndef DEBUG_CFLAGS
+-DEBUG_CFLAGS=-ggdb -O0
++DEBUG_CFLAGS=-Os -s
+ endif
+ 
+ ifndef USE_DEMO_FORMAT_42
+@@ -322,16 +322,16 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu" "gnu")
+     -pipe -DUSE_ICON -DARCH_STRING=\\\"$(ARCH)\\\"
+   CLIENT_CFLAGS += $(SDL_CFLAGS)
+ 
+-  OPTIMIZEVM = -O3
++  OPTIMIZEVM = -Os -s
+   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+ 
+   ifeq ($(ARCH),x86_64)
+-    OPTIMIZEVM = -O3
++    OPTIMIZEVM = -Os -s
+     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+     HAVE_VM_COMPILED = true
+   else
+   ifeq ($(ARCH),x86)
+-    OPTIMIZEVM = -O3 -march=i586
++    OPTIMIZEVM = -Os -s -march=i586
+     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+     HAVE_VM_COMPILED=true
+   else
+@@ -411,7 +411,7 @@ ifeq ($(PLATFORM),darwin)
+   LIBS = -framework Cocoa
+   CLIENT_LIBS=
+   RENDERER_LIBS=
+-  OPTIMIZEVM = -O3
++  OPTIMIZEVM = -Os -s
+ 
+   # Default minimum Mac OS X version
+   ifeq ($(MACOSX_VERSION_MIN),)
+@@ -591,12 +591,12 @@ ifdef MINGW
+   endif
+ 
+   ifeq ($(ARCH),x86_64)
+-    OPTIMIZEVM = -O3
++    OPTIMIZEVM = -Os -s
+     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+     HAVE_VM_COMPILED = true
+   endif
+   ifeq ($(ARCH),x86)
+-    OPTIMIZEVM = -O3 -march=i586
++    OPTIMIZEVM = -Os -s -march=i586
+     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+     HAVE_VM_COMPILED = true
+   endif
+@@ -740,16 +740,16 @@ ifeq ($(PLATFORM),openbsd)
+     -pipe -DUSE_ICON -DMAP_ANONYMOUS=MAP_ANON
+   CLIENT_CFLAGS += $(SDL_CFLAGS)
+ 
+-  OPTIMIZEVM = -O3
++  OPTIMIZEVM = -Os -s
+   OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+ 
+   ifeq ($(ARCH),x86_64)
+-    OPTIMIZEVM = -O3
++    OPTIMIZEVM = -Os -s
+     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+     HAVE_VM_COMPILED = true
+   else
+   ifeq ($(ARCH),x86)
+-    OPTIMIZEVM = -O3 -march=i586
++    OPTIMIZEVM = -Os -s -march=i586
+     OPTIMIZE = $(OPTIMIZEVM) -ffast-math
+     HAVE_VM_COMPILED=true
+   else
+@@ -842,7 +842,7 @@ ifeq ($(PLATFORM),irix64)
+   BASE_CFLAGS=-Dstricmp=strcasecmp -Xcpluscomm -woff 1185 \
+     -I. -I$(ROOT)/usr/include
+   CLIENT_CFLAGS += $(SDL_CFLAGS)
+-  OPTIMIZE = -O3
++  OPTIMIZE = -Os -s
+ 
+   SHLIBEXT=so
+   SHLIBCFLAGS=
+@@ -879,10 +879,10 @@ ifeq ($(PLATFORM),sunos)
+     -pipe -DUSE_ICON
+   CLIENT_CFLAGS += $(SDL_CFLAGS)
+ 
+-  OPTIMIZEVM = -O3 -funroll-loops
++  OPTIMIZEVM = -Os -s -funroll-loops
+ 
+   ifeq ($(ARCH),sparc)
+-    OPTIMIZEVM += -O3 \
++    OPTIMIZEVM += -Os -s \
+       -fstrength-reduce -falign-functions=2 \
+       -mtune=ultrasparc3 -mv8plus -mno-faster-structs
+     HAVE_VM_COMPILED=true
+@@ -918,7 +918,7 @@ else # ifeq sunos
+ # SETUP AND BUILD -- GENERIC
+ #############################################################################
+   BASE_CFLAGS=
+-  OPTIMIZE = -O3
++  OPTIMIZE = -Os -s
+ 
+   SHLIBEXT=so
+   SHLIBCFLAGS=-fPIC
+diff --git a/code/qcommon/net_ip.c b/code/qcommon/net_ip.c
+index 435a7a5..af765d8 100644
+--- a/code/qcommon/net_ip.c
++++ b/code/qcommon/net_ip.c
+@@ -210,27 +210,34 @@ char *NET_ErrorString( void ) {
+ }
+ 
+ static void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
+-	if( a->type == NA_BROADCAST ) {
++	switch (a->type) {
++	case NA_BROADCAST:
+ 		((struct sockaddr_in *)s)->sin_family = AF_INET;
+ 		((struct sockaddr_in *)s)->sin_port = a->port;
+ 		((struct sockaddr_in *)s)->sin_addr.s_addr = INADDR_BROADCAST;
+-	}
+-	else if( a->type == NA_IP ) {
++		break;
++
++	case NA_IP:
+ 		((struct sockaddr_in *)s)->sin_family = AF_INET;
+ 		((struct sockaddr_in *)s)->sin_addr.s_addr = *(int *)&a->ip;
+ 		((struct sockaddr_in *)s)->sin_port = a->port;
+-	}
+-	else if( a->type == NA_IP6 ) {
++		break;
++
++	case NA_IP6:
+ 		((struct sockaddr_in6 *)s)->sin6_family = AF_INET6;
+ 		((struct sockaddr_in6 *)s)->sin6_addr = * ((struct in6_addr *) &a->ip6);
+ 		((struct sockaddr_in6 *)s)->sin6_port = a->port;
+ 		((struct sockaddr_in6 *)s)->sin6_scope_id = a->scope_id;
+-	}
+-	else if(a->type == NA_MULTICAST6)
+-	{
++		break;
++
++	case NA_MULTICAST6:
+ 		((struct sockaddr_in6 *)s)->sin6_family = AF_INET6;
+ 		((struct sockaddr_in6 *)s)->sin6_addr = curgroup.ipv6mr_multiaddr;
+ 		((struct sockaddr_in6 *)s)->sin6_port = a->port;
++		break;
++
++	default:
++		break;
+ 	}
+ }
+ 
+@@ -238,7 +245,7 @@ static void NetadrToSockadr( netadr_t *a, struct sockaddr *s ) {
+ static void SockadrToNetadr( struct sockaddr *s, netadr_t *a ) {
+ 	if (s->sa_family == AF_INET) {
+ 		a->type = NA_IP;
+-		*(int *)&a->ip = ((struct sockaddr_in *)s)->sin_addr.s_addr;
++		memcpy(a->ip, &((struct sockaddr_in *)s)->sin_addr.s_addr, sizeof(a->ip));
+ 		a->port = ((struct sockaddr_in *)s)->sin_port;
+ 	}
+ 	else if(s->sa_family == AF_INET6)
+diff --git a/code/qcommon/unzip.c b/code/qcommon/unzip.c
+index 9a8ee45..65418eb 100644
+--- a/code/qcommon/unzip.c
++++ b/code/qcommon/unzip.c
+@@ -249,45 +249,12 @@ local int unzlocal_getLong (pzlib_filefunc_def,filestream,pX)
+     return err;
+ }
+ 
+-local int strcmpcasenosensitive_internal OF((
+-    const char* fileName1,
+-    const char* fileName2));
+-
+-/* My own strcmpi / strcasecmp */
+-local int strcmpcasenosensitive_internal (fileName1,fileName2)
+-    const char* fileName1;
+-    const char* fileName2;
+-{
+-    for (;;)
+-    {
+-        char c1=*(fileName1++);
+-        char c2=*(fileName2++);
+-        if ((c1>='a') && (c1<='z'))
+-            c1 -= 0x20;
+-        if ((c2>='a') && (c2<='z'))
+-            c2 -= 0x20;
+-        if (c1=='\0')
+-            return ((c2=='\0') ? 0 : -1);
+-        if (c2=='\0')
+-            return 1;
+-        if (c1<c2)
+-            return -1;
+-        if (c1>c2)
+-            return 1;
+-    }
+-}
+-
+-
+ #ifdef  CASESENSITIVITYDEFAULT_NO
+ #define CASESENSITIVITYDEFAULTVALUE 2
+ #else
+ #define CASESENSITIVITYDEFAULTVALUE 1
+ #endif
+ 
+-#ifndef STRCMPCASENOSENTIVEFUNCTION
+-#define STRCMPCASENOSENTIVEFUNCTION strcmpcasenosensitive_internal
+-#endif
+-
+ /*
+    Compare two filename (fileName1,fileName2).
+    If iCaseSenisivity = 1, comparison is case sensitivity (like strcmp)
+@@ -308,7 +275,7 @@ extern int ZEXPORT unzStringFileNameCompare (fileName1,fileName2,iCaseSensitivit
+     if (iCaseSensitivity==1)
+         return strcmp(fileName1,fileName2);
+ 
+-    return STRCMPCASENOSENTIVEFUNCTION(fileName1,fileName2);
++    return strcmp(fileName1,fileName2);
+ }
+ 
+ #ifndef BUFREADCOMMENT
+diff --git a/code/renderergl1/tr_shade.c b/code/renderergl1/tr_shade.c
+index 617fbf2..0fe1873 100644
+--- a/code/renderergl1/tr_shade.c
++++ b/code/renderergl1/tr_shade.c
+@@ -1107,10 +1107,8 @@ void RB_StageIteratorGeneric( void )
+ void RB_StageIteratorVertexLitTexture( void )
+ {
+ 	shaderCommands_t *input;
+-	shader_t		*shader;
+ 
+ 	input = &tess;
+-	shader = input->shader;
+ 
+ 	//
+ 	// compute colors
+@@ -1186,10 +1184,8 @@ void RB_StageIteratorVertexLitTexture( void )
+ 
+ void RB_StageIteratorLightmappedMultitexture( void ) {
+ 	shaderCommands_t *input;
+-	shader_t		*shader;
+ 
+ 	input = &tess;
+-	shader = input->shader;
+ 
+ 	//
+ 	// log this call
