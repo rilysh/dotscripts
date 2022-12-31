@@ -135,6 +135,13 @@ servers pool.ntp.org
 server <your_country_code.pool.ntp.org> # Example: jp.pool.ntp.org
 sensor *
 ```
+Issue: If by doing anything the time didn't fix, try to reset BIOS time. Void reads the hardware clock first, so if OS time isn't exactly synchronized with hardware time, it will conflict there. For some reason, if you didn't find the time resetting feature in the BIOS, the best way to reset is to remove the CMOS battery and insert it back after ten minutes. For more info, see below.
+[link 1](https://www.ibm.com/docs/en/flashsystem-7x00/8.3.x?topic=parts-removing-replacing-cmos-battery)
+[link 2](https://www.hp.com/us-en/shop/tech-takes/what-is-cmos-battery-how-to-remove-and-replace)
+[link 3](https://www.repairwin.com/fix-pc-loses-time-settings-4-ways-to-resolve-the-problem/)
+
+You don't need to replace the CMOS battery, but just pull it from there and hold on for ten minutes and insert it back again!\
+**Warning**: By removing the CMOS battery it will also reset your BIOS settings, so you may have to set up your BIOS again accordingly!
 
 ##### Show other drives or partitions
 By default Void won't mount your external drives or your HDD partitions, so we'll make them mount automatically whenever we boot into our system.
