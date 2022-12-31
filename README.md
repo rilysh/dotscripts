@@ -120,18 +120,26 @@ sudo ln -s /usr/share/fontconfig/conf.avail/70-no-bitmaps.conf /etc/fonts/conf.d
 ```
 
 ##### Fix misleading time
-Sometimes default timezone may not show your current time, even you link your timezone in `/etc/localtime`. To get time accuracy, we'll use a NTP daemon.
+Sometimes default timezone may not show your current time, even if you link your timezone in `/etc/localtime`. To get time accuracy, we'll use an NTP daemon.
 ```sh
 # I prefer OpenNTPD, however, you can choose whatever you like from https://docs.voidlinux.org/config/date-time.html
 sudo xbps-install -S openntpd
 sudo ln -s /etc/sv/openntpd /var/service
 ```
-Click on time applet again and see if time it's updated now. To verify, go to `https://time.is` website.
+Click on the time applet again and see if the time it's updated now. To verify, go to `https://time.is` website.
+
+Note: If you found the time that OpenNTPD is showing is wrong, please change the server according to your location. To get a server list see [here](https://www.pool.ntp.org/zone/@).\
+Open `/etc/ntpd.conf` with vim and change this portion.
+```conf
+servers pool.ntp.org
+server <your_country_code.pool.ntp.org> # Example: jp.pool.ntp.org
+sensor *
+```
 
 ##### Show other drives or partitions
 By default Void won't mount your external drives or your HDD partitions, so we'll make them mount automatically whenever we boot into our system.
 ```sh
-# Create a or more directory with a unique name
+# Create a or more directories with a unique name
 # For me, I've one HDD and in that HDD I've 3 partitions
 sudo mkdir /media/alpha
 sudo mkdir /media/charlie
@@ -144,13 +152,13 @@ sudo mount /dev/sdX /media/alpha
 sudo mount /dev/sdY /media/charlie
 sudo mount /dev/sdZ /media/delta
 ```
-Open thunar, and if you can see partitions or drives in "Devices" section.\
+Open thunar, and if you can see partitions or drives in the "Devices" section.\
 We have to make them permanent, so open `/etc/fstab` and address devices accordingly.
 ```sh
 # Run blkid to get UUID of these devices
 blkid
 
-# Copy the UUID and paste them in fstab with this following format
+# Copy the UUID and paste them in fstab with the following format
 UUID=<COPIED_UUID> <MOUNTED_PATH> <FS_TYPE> defaults <BCK_OP FS_ORDER>
 
 # COPIED_UUID - The UUID you get from blkid (make sure to copy for those secondary drives only).
@@ -183,7 +191,7 @@ sudo xbps-install -S webp-pixbuf-loader
 ```
 
 ##### Disable BTRFS and LVM (advanced)
-If you didn't setup BTRFS or LVM on installation or don't want used BTRFS file system anywhere nor LVM, you can remove both of them to reduce boot time.
+If you didn't set up BTRFS or LVM on installation or don't want to use BTRFS or LVM anywhere, you can remove both of them to reduce boot time.
 ```sh
 # Ignore these packages
 echo "ignorepkg=btrfs-progs" | sudo tee /etc/xbps.d/10-ignores.conf
@@ -193,15 +201,15 @@ sudo xbps-remove -Ry btrfs-progs lvm2
 ```
 
 ##### Disable watchdog (advanced)
-Watchdog is used to check if the system is freezed so the OS will reboot eventually. However, this feature is unnecessary for a desktop or laptop user, as we'll likely reboot if something happens.
+Watchdog is used to check if the system is frozen so the OS will reboot eventually. However, this feature is unnecessary for a desktop or laptop user, as we'll likely reboot if something happens.
 
-Open `/etc/default/grub` with Vim (or nano) and append this following parameter
+Open `/etc/default/grub` with Vim (or nano) and append the following parameter
 ```sh
 # Using vim
 sudo vim /etc/default/grub
 
 # Disable watchdog in grub
-GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog" # Remember to append it after first parameter and seperate them with a space
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog" # Remember to append it after first parameter and separate them with a space
 # Save and exit
 ```
 Now update the grub config with
