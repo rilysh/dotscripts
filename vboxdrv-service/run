@@ -1,0 +1,10 @@
+#!/bin/bash
+vboxdrv="/lib/modules/6.1.3_1/misc/vboxdrv.ko"
+vboxnetadp="/lib/modules/6.1.3_1/misc/vboxnetadp.ko"
+vboxnetflt="/lib/modules/6.1.3_1/misc/vboxnetflt.ko"
+if [ -f $vboxdrv ]; then
+    rmmod $vboxnetadp && rmmod $vboxnetflt && rmmod $vboxdrv
+    insmod $vboxdrv && insmod $vboxnetadp && insmod $vboxnetflt
+else
+    echo "Error: Unable to find $vboxdrv\nPlease run /sbin/vboxconfig and try again"
+fi
