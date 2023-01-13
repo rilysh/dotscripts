@@ -248,5 +248,5 @@ sudo xbps-install -Suy
 
 ```sh
 # You can omit any one, two, or whole
-sudo xbps-install -S 7zip element-desktop firefox fish-shell flameshot git github-cli gparted htop krita lightdm-gtk-greeter-settings man-pages-devel mpv pass qView sakura vscode unzip xtools
+sudo xbps-install -S 7zip element-desktop firefox fish-shell flameshot git github-cli gparted htop krita lightdm-gtk-greeter-settings man-pages-devel mpv newsboat pass qView sakura vscode unzip xtools
 ```
