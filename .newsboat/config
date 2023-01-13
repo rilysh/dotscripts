@@ -1,0 +1,3 @@
+refresh-on-startup yes
+browser "firefox %u"
+

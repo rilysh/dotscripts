@@ -1,0 +1,29 @@
+# News feeds
+https://www.propublica.org/feeds/propublica/main # Propublica
+https://www.theguardian.com/world/activism/rss # Activism
+https://www.theguardian.com/uk/technology/rss # Tech news
+
+# GNU/Linux and BSD news feeds
+https://www.debian.org/News/news # Debian
+https://voidlinux.org/atom.xml # Void Linux
+https://mirrors.slackware.com/feeds/slackware64-current.rss # Slackware
+https://ubuntu.com/blog/feed # Ubuntu
+https://www.freebsd.org/news/feed.xml # FreeBSD
+http://www.netbsd.org/changes/rss-netbsd.xml # NetBSD
+http://www.netbsd.org/changes/rss-netbsd-pkgs.xml # NetBSD Packages
+https://www.freshports.org/backend/atom0.3.php # Freshports
+https://www.omgubuntu.co.uk/feed # OMG Ubuntu
+https://lwn.net/headlines/newrss # LWN
+
+# Security
+https://threatpost.com/feed # Threatpost
+
+# YouTube feeds
+https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ # Marques Brownlee
+https://www.youtube.com/feeds/videos.xml?channel_id=UCtMVHI3AJD4Qk4hcbZnI9ZQ # SomeOrdinaryGamer
+https://www.youtube.com/feeds/videos.xml?channel_id=UCX6OQ3DkcsbYNE6H8uQQuVA # MrBeast
+https://www.youtube.com/feeds/videos.xml?channel_id=UCAiLfjNXkNv24uhpzUgPa6A # MrBeast Philanthropy
+https://www.youtube.com/feeds/videos.xml?channel_id=UCY5fcqgSrQItPAX_Z5Frmwg # KADOKAWA
+
+# Private feeds
+https://github.com/rilysh.private.atom?token=<TOKEN> # My GitHub feeds
