@@ -125,6 +125,11 @@ Sometimes default timezone may not show your current time, even if you link your
 # I prefer OpenNTPD, however, you can choose whatever you like from https://docs.voidlinux.org/config/date-time.html
 sudo xbps-install -S openntpd
 sudo ln -s /etc/sv/openntpd /var/service
+
+# Note: If openntpd unable to synchronize your localtime to Internet time, please use chrony instead
+sudo xbps-remove -R openntpd # If you've already installed openntpd by following the previous step
+sudo xbps-install -S chrony
+sudo ln -s /etc/sv/chrony /var/service
 ```
 Click on the time applet again and see if the time it's updated now. To verify, go to `https://time.is` website.
 
