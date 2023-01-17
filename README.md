@@ -119,7 +119,7 @@ Without disabling bitmap fonts, Firefox fonts will appear like quite old style r
 sudo ln -s /usr/share/fontconfig/conf.avail/70-no-bitmaps.conf /etc/fonts/conf.d
 ```
 
-##### Fix misleading time
+##### Fix misleading time (optional)
 Sometimes default timezone may not show your current time, even if you link your timezone in `/etc/localtime`. To get time accuracy, we'll use an NTP daemon.
 ```sh
 # I prefer OpenNTPD, however, you can choose whatever you like from https://docs.voidlinux.org/config/date-time.html
@@ -195,12 +195,21 @@ sudo xbps-install -S gvfs-mtp
 ##### Support webp thumbnail
 Xfce and Thunar can't recognize webp format images.
 ```sh
-# Install webp devel (included webp format and development libs)
-sudo xbps-install -S libwebp-devel
-
 # Install webp-pixel-buffer loader
 sudo xbps-install -S webp-pixbuf-loader
 ```
+
+#### Change local ISP DNS to Cloudflare DNS (optional)
+Note: Recently, I'm noticing that several websites I can't load, more in the context, they just *hang* while my ISP's DNS server try to resolving them and at the end, its never get loaded. I assume my ISP did block those websites which you know is a complete worse senerio.
+```sh
+# Temporary change DNS server
+echo "nameserver=1.1.1.1" | sudo tee -a /etc/resolv.conf
+
+# Permannent change of the DNS server
+## Open /etc/resolvconf.conf with vim and uncomment name_servers and after that change name_servers value to something like this.
+name_servers=1.1.1.1 
+```
+Reboot your system.
 
 ##### Disable BTRFS and LVM (advanced)
 If you didn't set up BTRFS or LVM on installation or don't want to use BTRFS or LVM anywhere, you can remove both of them to reduce boot time.
