@@ -1,0 +1,429 @@
+diff --git a/Makefile b/Makefile
+index ee2700a..7aa9bc8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -8,6 +8,10 @@ COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e
+ 
+ COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
+ 
++USE_SSE=1
++USE_AVX=1
++USE_EX_SSE=1
++
+ ifeq ($(COMPILE_PLATFORM),sunos)
+   # Solaris uname and GNU uname differ
+   COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
+@@ -717,6 +721,9 @@ else # ifeq mingw32
+ 
+ ifeq ($(PLATFORM),freebsd)
+ 
++  # If you've GCC installed on FreeBSD, default CC value may refer to GCC.
++  # So for that case, we'll explicitly set CC to clang. 
++  CC=clang
+   # flags
+   BASE_CFLAGS = $(shell env MACHINE_ARCH=$(ARCH) make -f /dev/null -VCFLAGS) \
+     -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes \
+@@ -724,8 +731,21 @@ ifeq ($(PLATFORM),freebsd)
+   CLIENT_CFLAGS += $(SDL_CFLAGS)
+   HAVE_VM_COMPILED = true
+ 
+-  OPTIMIZEVM = -O3 -funroll-loops -fomit-frame-pointer
+-  OPTIMIZE = $(OPTIMIZEVM) -ffast-math
++  OPTIMIZEVM = -Ofast -funroll-loops -fomit-frame-pointer
++  OPTIMIZE = $(OPTIMIZEVM) -ffast-math \
++             -falign-functions=2 -finline-functions \
++             -funit-at-a-time
++
++  ifeq ($(USE_SSE), 1)
++    OPTIMIZE += -msse -msse2 -mfpmath=sse
++    ifeq ($(USE_EX_SSE), 1)
++      OPTIMIZE += -msse3 -msse4.1
++    endif
++  endif
++
++  ifeq ($(USE_AVX), 1)
++    OPTIMIZE += -mavx
++  endif
+ 
+   SHLIBEXT=so
+   SHLIBCFLAGS=-fPIC
+diff --git a/code/botlib/be_aas_entity.c b/code/botlib/be_aas_entity.c
+index 02699bd..6dc0c22 100644
+--- a/code/botlib/be_aas_entity.c
++++ b/code/botlib/be_aas_entity.c
+@@ -390,9 +390,9 @@ int AAS_NearestEntity(vec3_t origin, int modelindex)
+ 		ent = &aasworld.entities[i];
+ 		if (ent->i.modelindex != modelindex) continue;
+ 		VectorSubtract(ent->i.origin, origin, dir);
+-		if (abs(dir[0]) < 40)
++		if (fabsf(dir[0]) < 40.0)
+ 		{
+-			if (abs(dir[1]) < 40)
++			if (fabsf(dir[1]) < 40.0)
+ 			{
+ 				dist = VectorLength(dir);
+ 				if (dist < bestdist)
+diff --git a/code/botlib/be_aas_move.c b/code/botlib/be_aas_move.c
+index c42b6cc..589e7bb 100644
+--- a/code/botlib/be_aas_move.c
++++ b/code/botlib/be_aas_move.c
+@@ -168,7 +168,7 @@ int AAS_AgainstLadder(vec3_t origin)
+ 		//get the plane the face is in
+ 		plane = &aasworld.planes[face->planenum ^ side];
+ 		//if the origin is pretty close to the plane
+-		if (abs(DotProduct(plane->normal, origin) - plane->dist) < 3)
++		if (fabsf(DotProduct(plane->normal, origin) - plane->dist) < 3.0)
+ 		{
+ 			if (AAS_PointInsideFace(abs(facenum), origin, 0.1f)) return qtrue;
+ 		} //end if
+diff --git a/code/botlib/be_aas_reach.c b/code/botlib/be_aas_reach.c
+index 0520e2c..d26762e 100644
+--- a/code/botlib/be_aas_reach.c
++++ b/code/botlib/be_aas_reach.c
+@@ -2467,8 +2467,8 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
+ 		VectorMA(area1point, -32, dir, area1point);
+ 		VectorMA(area2point, 32, dir, area2point);
+ 		//
+-		ladderface1vertical = abs(DotProduct(plane1->normal, up)) < 0.1;
+-		ladderface2vertical = abs(DotProduct(plane2->normal, up)) < 0.1;
++		ladderface1vertical = fabsf(DotProduct(plane1->normal, up)) < 0.1;
++		ladderface2vertical = fabsf(DotProduct(plane2->normal, up)) < 0.1;
+ 		//there's only reachability between vertical ladder faces
+ 		if (!ladderface1vertical && !ladderface2vertical) return qfalse;
+ 		//if both vertical ladder faces
+@@ -2476,7 +2476,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
+ 					//and the ladder faces do not make a sharp corner
+ 					&& DotProduct(plane1->normal, plane2->normal) > 0.7
+ 					//and the shared edge is not too vertical
+-					&& abs(DotProduct(sharededgevec, up)) < 0.7)
++					&& fabsf(DotProduct(sharededgevec, up)) < 0.7)
+ 		{
+ 			//create a new reachability link
+ 			lreach = AAS_AllocReachability();
+@@ -2601,7 +2601,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
+ 				if (face2->faceflags & FACE_LADDER)
+ 				{
+ 					plane2 = &aasworld.planes[face2->planenum];
+-					if (abs(DotProduct(plane2->normal, up)) < 0.1) break;
++					if (fabsf(DotProduct(plane2->normal, up)) < 0.1) break;
+ 				} //end if
+ 			} //end for
+ 			//if from another area without vertical ladder faces
+diff --git a/code/botlib/be_ai_move.c b/code/botlib/be_ai_move.c
+index 0c4de34..42232d6 100644
+--- a/code/botlib/be_ai_move.c
++++ b/code/botlib/be_ai_move.c
+@@ -2054,7 +2054,7 @@ bot_moveresult_t BotTravel_Elevator(bot_movestate_t *ms, aas_reachability_t *rea
+ 		botimport.Print(PRT_MESSAGE, "bot on elevator\n");
+ #endif //DEBUG_ELEVATOR
+ 		//if vertically not too far from the end point
+-		if (abs(ms->origin[2] - reach->end[2]) < sv_maxbarrier->value)
++		if (fabsf(ms->origin[2] - reach->end[2]) < sv_maxbarrier->value)
+ 		{
+ #ifdef DEBUG_ELEVATOR
+ 			botimport.Print(PRT_MESSAGE, "bot moving to end\n");
+diff --git a/code/botlib/l_precomp.c b/code/botlib/l_precomp.c
+index bfa7564..c25d981 100644
+--- a/code/botlib/l_precomp.c
++++ b/code/botlib/l_precomp.c
+@@ -2442,7 +2442,7 @@ int PC_Directive_eval(source_t *source)
+ 	token.whitespace_p = source->scriptstack->script_p;
+ 	token.endwhitespace_p = source->scriptstack->script_p;
+ 	token.linescrossed = 0;
+-	sprintf(token.string, "%d", abs(value));
++	sprintf(token.string, "%ld", labs(value));
+ 	token.type = TT_NUMBER;
+ 	token.subtype = TT_INTEGER|TT_LONG|TT_DECIMAL;
+ 	PC_UnreadSourceToken(source, &token);
+@@ -2547,12 +2547,12 @@ int PC_DollarDirective_evalint(source_t *source)
+ 	token.whitespace_p = source->scriptstack->script_p;
+ 	token.endwhitespace_p = source->scriptstack->script_p;
+ 	token.linescrossed = 0;
+-	sprintf(token.string, "%d", abs(value));
++	sprintf(token.string, "%ld", labs(value));
+ 	token.type = TT_NUMBER;
+ 	token.subtype = TT_INTEGER|TT_LONG|TT_DECIMAL;
+ 
+ #ifdef NUMBERVALUE
+-	token.intvalue = abs(value);
++	token.intvalue = labs(value);
+ 	token.floatvalue = token.intvalue;
+ #endif //NUMBERVALUE
+ 
+diff --git a/code/client/cl_avi.c b/code/client/cl_avi.c
+index 3b0d775..17fd371 100644
+--- a/code/client/cl_avi.c
++++ b/code/client/cl_avi.c
+@@ -122,17 +122,6 @@ static ID_INLINE void WRITE_2BYTES( int x )
+   bufIndex += 2;
+ }
+ 
+-/*
+-===============
+-WRITE_1BYTES
+-===============
+-*/
+-static ID_INLINE void WRITE_1BYTES( int x )
+-{
+-  buffer[ bufIndex ] = x;
+-  bufIndex += 1;
+-}
+-
+ /*
+ ===============
+ START_CHUNK
+diff --git a/code/client/cl_cin.c b/code/client/cl_cin.c
+index ee86a1b..4da5285 100644
+--- a/code/client/cl_cin.c
++++ b/code/client/cl_cin.c
+@@ -1365,7 +1365,7 @@ e_status CIN_RunCinematic (int handle)
+ 	}
+ 
+ 	thisTime = CL_ScaledMilliseconds()*com_timescale->value;
+-	if (cinTable[currentHandle].shader && (abs(thisTime - cinTable[currentHandle].lastTime))>100) {
++	if (cinTable[currentHandle].shader && (thisTime - cinTable[currentHandle].lastTime)>100) {
+ 		cinTable[currentHandle].startTime += thisTime - cinTable[currentHandle].lastTime;
+ 	}
+ 	cinTable[currentHandle].tfps = ((((CL_ScaledMilliseconds()*com_timescale->value) - cinTable[currentHandle].startTime)*3)/100);
+diff --git a/code/client/cl_input.c b/code/client/cl_input.c
+index 0655f18..2eb26e5 100644
+--- a/code/client/cl_input.c
++++ b/code/client/cl_input.c
+@@ -604,10 +604,10 @@ usercmd_t CL_CreateCmd( void ) {
+ 	// draw debug graphs of turning for mouse testing
+ 	if ( cl_debugMove->integer ) {
+ 		if ( cl_debugMove->integer == 1 ) {
+-			SCR_DebugGraph( abs(cl.viewangles[YAW] - oldAngles[YAW]) );
++			SCR_DebugGraph( fabsf(cl.viewangles[YAW] - oldAngles[YAW]) );
+ 		}
+ 		if ( cl_debugMove->integer == 2 ) {
+-			SCR_DebugGraph( abs(cl.viewangles[PITCH] - oldAngles[PITCH]) );
++			SCR_DebugGraph( fabsf(cl.viewangles[PITCH] - oldAngles[PITCH]) );
+ 		}
+ 	}
+ 
+diff --git a/code/qcommon/common.c b/code/qcommon/common.c
+index e0c0ae0..d751e50 100644
+--- a/code/qcommon/common.c
++++ b/code/qcommon/common.c
+@@ -1360,33 +1360,22 @@ Touch all known used data to make sure it is paged in
+ */
+ void Com_TouchMemory( void ) {
+ 	int		start, end;
+-	int		i, j;
+-	int		sum;
+ 	memblock_t	*block;
+ 
+ 	Z_CheckHeap();
+ 
+ 	start = Sys_Milliseconds();
++	
++	// assume page touch instead patching the block
+ 
+-	sum = 0;
+-
+-	j = hunk_low.permanent >> 2;
+-	for ( i = 0 ; i < j ; i+=64 ) {			// only need to touch each page
+-		sum += ((int *)s_hunkData)[i];
+-	}
+-
+-	i = ( s_hunkTotal - hunk_high.permanent ) >> 2;
+-	j = hunk_high.permanent >> 2;
+-	for (  ; i < j ; i+=64 ) {			// only need to touch each page
+-		sum += ((int *)s_hunkData)[i];
+-	}
++	hunk_low.permanent >>= 2;
++	s_hunkTotal -= hunk_high.permanent >> 2;
++	hunk_high.permanent >>= 2;
+ 
+ 	for (block = mainzone->blocklist.next ; ; block = block->next) {
+ 		if ( block->tag ) {
+-			j = block->size >> 2;
+-			for ( i = 0 ; i < j ; i+=64 ) {				// only need to touch each page
+-				sum += ((int *)block)[i];
+-			}
++			block->size >>= 2;
++			// assume page touch instead patching the block
+ 		}
+ 		if ( block->next == &mainzone->blocklist ) {
+ 			break;			// all blocks have been hit	
+@@ -1478,7 +1467,7 @@ Hunk_SmallLog
+ void Hunk_SmallLog( void) {
+ 	hunkblock_t	*block, *block2;
+ 	char		buf[4096];
+-	int size, locsize, numBlocks;
++	int size, numBlocks;
+ 
+ 	if (!logfile || !FS_Initialized())
+ 		return;
+@@ -1493,7 +1482,6 @@ void Hunk_SmallLog( void) {
+ 		if (block->printed) {
+ 			continue;
+ 		}
+-		locsize = block->size;
+ 		for (block2 = block->next; block2; block2 = block2->next) {
+ 			if (block->line != block2->line) {
+ 				continue;
+@@ -1502,7 +1490,6 @@ void Hunk_SmallLog( void) {
+ 				continue;
+ 			}
+ 			size += block2->size;
+-			locsize += block2->size;
+ 			block2->printed = qtrue;
+ 		}
+ #ifdef HUNK_DEBUG
+diff --git a/code/renderer_oa/tr_bsp.c b/code/renderer_oa/tr_bsp.c
+index 646eb24..6d32863 100644
+--- a/code/renderer_oa/tr_bsp.c
++++ b/code/renderer_oa/tr_bsp.c
+@@ -139,7 +139,6 @@ static	void R_LoadLightmaps( lump_t *l ) {
+ 	byte		image[LIGHTMAP_SIZE*LIGHTMAP_SIZE*4];
+ 	int			i, j;
+ 	float maxIntensity = 0;
+-	double sumIntensity = 0;
+ 
+ 	len = l->filelen;
+ 	if ( !len ) {
+@@ -194,8 +193,6 @@ static	void R_LoadLightmaps( lump_t *l ) {
+ 				image[j*4+1] = out[1] * 255;
+ 				image[j*4+2] = out[2] * 255;
+ 				image[j*4+3] = 255;
+-
+-				sumIntensity += intensity;
+ 			}
+ 		} else {
+ 			for ( j = 0 ; j < LIGHTMAP_SIZE * LIGHTMAP_SIZE; j++ ) {
+diff --git a/code/renderer_oa/tr_image.c b/code/renderer_oa/tr_image.c
+index ab60e48..9de6584 100644
+--- a/code/renderer_oa/tr_image.c
++++ b/code/renderer_oa/tr_image.c
+@@ -987,7 +987,6 @@ leilei - Tries to fade mips to gray for detail texture pattern artifact stomping
+ 
+ static void R_BlendToGray( byte *data, int pixelCount, int fadeto) {
+ 	int		i, j;
+-	float 		gary = 127 * 0.5;
+ 	float		blended;
+ 	float		alphed, alpher;
+ 
+@@ -1005,8 +1004,6 @@ static void R_BlendToGray( byte *data, int pixelCount, int fadeto) {
+ 
+ 	fadeto += 1;
+ 
+-	gary /= fadeto;
+-
+ 	for ( i = 0 ; i < pixelCount ; i++, data+=4 ) {
+ 		for(j=0;j<3;j++){
+ 		
+@@ -1061,9 +1058,6 @@ static void DumpTex( unsigned *data,
+ 	alffer = 	ri.Hunk_AllocateTempMemory( width * height * 3 );
+ 	// TODO: Save alpha separately
+ 	// I'm gonna flip......
+-	int alfcnt = 0;
+-
+-
+ 
+ 	for (be=0; be<scrale; be++){
+ 		int bib;
+@@ -1083,7 +1077,6 @@ static void DumpTex( unsigned *data,
+ 		alffer[bib*3+1] 	= scan[ber*4+3];
+ 		alffer[bib*3+2] 	= scan[ber*4+3];
+ 		if (scan[ber*4+3] > 1){ hasalf = 1;}
+-		if (scan[ber*4+3] == 255){ alfcnt += 1; }
+ 	}
+ 
+ 
+diff --git a/code/renderer_oa/tr_main.c b/code/renderer_oa/tr_main.c
+index 4585582..f2428b0 100644
+--- a/code/renderer_oa/tr_main.c
++++ b/code/renderer_oa/tr_main.c
+@@ -859,7 +859,6 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
+ 	int dlighted;
+ 	vec4_t clip, eye;
+ 	int i;
+-	unsigned int pointOr = 0;
+ 	unsigned int pointAnd = (unsigned int)~0;
+ 
+ 	R_RotateForViewer();
+@@ -889,7 +888,6 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
+ 			}
+ 		}
+ 		pointAnd &= pointFlags;
+-		pointOr |= pointFlags;
+ 	}
+ 
+ 	// trivially reject
+diff --git a/code/renderer_oa/tr_particles.c b/code/renderer_oa/tr_particles.c
+index 6906efd..2e0726f 100644
+--- a/code/renderer_oa/tr_particles.c
++++ b/code/renderer_oa/tr_particles.c
+@@ -413,7 +413,6 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			// ORIENTED sprite - used for shockwaves, water waves, waves, etc.
+ 			vec3_t	argles;
+ 			vec3_t		right, up;
+-			int ind=0;
+ 			vectoangles( p->dir, argles );
+ 			AngleVectors ( argles, NULL, right, up);
+ 
+@@ -480,9 +479,7 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			tess.indexes[tess.numIndexes++] = 2;
+ 			tess.indexes[tess.numIndexes++] = 3;
+ 
+-			ind+=4;
+ 			RB_EndSurface();
+-
+ 		}
+ 		else if (p->rendertype == LFXSPARK) {
+ 			// STRETCHY SPARK sprite - used for sparks etc
+@@ -491,7 +488,6 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			vec3_t		line;
+ 			float		len, begin, end;
+ 			vec3_t		start, finish;
+-			int ind=0;
+ 			vec3_t oldorgstretch;
+ 			vectoangles( p->dir, argles );
+ 			AngleVectors ( argles, NULL, right, up);
+@@ -579,10 +575,8 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			tess.indexes[tess.numIndexes++] = 2;
+ 			tess.indexes[tess.numIndexes++] = 3;
+ 
+-			ind+=4;
+ 			RB_EndSurface();
+ 
+-
+ 			// center glow of softness?  Enable for 2002 particleset?
+ 
+ 		}
+@@ -595,7 +589,6 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			vec3_t		line;
+ 			float		len, begin, end;
+ 			vec3_t		start, finish;
+-			int ind=0;
+ 			vec3_t oldorgstretch;
+ 			vectoangles( p->dir, argles );
+ 			AngleVectors ( argles, NULL, right, up);
+@@ -684,7 +677,6 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			tess.indexes[tess.numIndexes++] = 2;
+ 			tess.indexes[tess.numIndexes++] = 3;
+ 
+-			ind+=4;
+ 			RB_EndSurface();
+ 		}
+ 		else if (p->rendertype == LFXTRAIL) {
+@@ -696,7 +688,6 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			// VP PARALLEL sprite
+ 			//	trace_t pt1, pt2, pt3, pt4;
+ 			//	float avgfrac;
+-			int ind=0;
+ 			width = p->width + ( ratio * ( p->endwidth - p->width) );
+ 			height = p->height + ( ratio * ( p->endheight - p->height) );
+ 
+@@ -781,9 +772,7 @@ void R_AddParticleToScene (particle_t *p, vec3_t org, float alpha)
+ 			tess.indexes[tess.numIndexes++] = 2;
+ 			tess.indexes[tess.numIndexes++] = 3;
+ 
+-			ind+=4;
+ 			RB_EndSurface();
+-
+ 		}
+ 	}
+ 

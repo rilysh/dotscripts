@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+ldd openarena.x86_64 | sed -E 's/=>|so|[.].*//g;s/\t|openarena//g'
