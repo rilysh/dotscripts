@@ -1,29 +1,39 @@
-# News feeds
-https://www.propublica.org/feeds/propublica/main # Propublica
-https://www.theguardian.com/world/activism/rss # Activism
-https://www.theguardian.com/uk/technology/rss # Tech news
+"---GitHub---"
+https://github.com/rilysh.private.atom?token=TOKEN
+https://github.blog/feed/
+https://github.blog/changelog/feed/
 
-# GNU/Linux and BSD news feeds
-https://www.debian.org/News/news # Debian
-https://voidlinux.org/atom.xml # Void Linux
-https://mirrors.slackware.com/feeds/slackware64-current.rss # Slackware
-https://ubuntu.com/blog/feed # Ubuntu
-https://www.freebsd.org/news/feed.xml # FreeBSD
-http://www.netbsd.org/changes/rss-netbsd.xml # NetBSD
-http://www.netbsd.org/changes/rss-netbsd-pkgs.xml # NetBSD Packages
-https://www.freshports.org/backend/atom0.3.php # Freshports
-https://www.omgubuntu.co.uk/feed # OMG Ubuntu
-https://lwn.net/headlines/newrss # LWN
+"  "
+"---Twitter---"
+https://nitter.snopyta.org/someonenamedjhx/rss
 
-# Security
-https://threatpost.com/feed # Threatpost
+"  "
+"---Mastodon---"
+https://fosstodon.org/@jhx.rss
+https://fosstodon.org/@jhx/with_replies.rss
+https://mastodon.sdf.org/@dev1ls.rss
+https://mastodon.sdf.org/@dev1ls/with_replies.rss
 
-# YouTube feeds
-https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ # Marques Brownlee
-https://www.youtube.com/feeds/videos.xml?channel_id=UCtMVHI3AJD4Qk4hcbZnI9ZQ # SomeOrdinaryGamer
-https://www.youtube.com/feeds/videos.xml?channel_id=UCX6OQ3DkcsbYNE6H8uQQuVA # MrBeast
-https://www.youtube.com/feeds/videos.xml?channel_id=UCAiLfjNXkNv24uhpzUgPa6A # MrBeast Philanthropy
-https://www.youtube.com/feeds/videos.xml?channel_id=UCY5fcqgSrQItPAX_Z5Frmwg # KADOKAWA
+"  "
+"---YouTube---"
+https://www.youtube.com/feeds/videos.xml?channel_id=UCt_0qjzmxopG3leL3OuvlFQ
+https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ
+https://www.youtube.com/feeds/videos.xml?channel_id=UCGbshtvS9t-8CW11W7TooQg
+https://www.youtube.com/feeds/videos.xml?channel_id=UCZquI9yU4jBgDH9DH4U_Uvw
+https://www.youtube.com/feeds/videos.xml?channel_id=UCFW1d01AH4M_CIzuCb8s9Bg
+https://www.youtube.com/feeds/videos.xml?channel_id=UCOTR1tcOAhjgi6YukrPpZxg
+https://www.youtube.com/feeds/videos.xml?channel_id=UCMiJRAwDNSNzuYeN2uWa0pA
+https://www.youtube.com/feeds/videos.xml?channel_id=UCBa659QWEk1AI4Tg--mrJ2A
+https://www.youtube.com/feeds/videos.xml?channel_id=UCBZiUUYeLfS5rIj4TQvgSvA
+https://www.youtube.com/feeds/videos.xml?channel_id=UCHQDjDDW8w2RieO-IuqYlyg
+https://www.youtube.com/feeds/videos.xml?channel_id=UCE_M8A5yxnLfW0KghEeajjw
+https://www.youtube.com/feeds/videos.xml?channel_id=UCzKvSwhH0Ilo3cU5JBxJNYA
 
-# Private feeds
-https://github.com/rilysh.private.atom?token=<TOKEN> # My GitHub feeds
+"  "
+"---Linux---"
+https://voidlinux.org/atom.xml
+https://news.opensuse.org/feed/
+
+"  "
+"---OpenBSD---"
+https://undeadly.org/cgi?action=rss
