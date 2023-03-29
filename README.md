@@ -7,7 +7,7 @@ Void is another general-purpose GNU/Linux distro that is built from the ground u
 3. [Installation](#installation)
 4. [Post Installation](#post-installation)
 5. [Install X11 and Xfce](#install-x11-and-xfce)
-6. [Install and configure login manager](#install-and-configure-login-manager)
+6. [Install and configure login manager](#install-and-configure-the-login-manager)
 7. [Configure The System](#configure-the-system)
 8. [Install other software](#install-other-software)
 
@@ -35,7 +35,7 @@ Test network connection by pinging, `ping duckduckgo.com` (use CTRL+C to exit fr
 
 If you're on a wireless connection, you've to configure the connection.\
 ```sh
-# This make sure that the connection interface isn't blocked
+# This makes sure that the connection interface isn't blocked
 rfkill unblock wlan
 
 # Check if the wireless interface is connected properly and listed
@@ -57,12 +57,15 @@ P.S. If necessary you may need to reboot the PC after configuring the wireless c
 To get a proper desktop environment, we need to install X11 (display server) and Xfce (desktop environment).\
 It's also a pretty much straightforward job!\
 ```sh
-# Install Xorg and Xfce4
-sudo xbps-install -Sy xorg xfce4
+# Install Xorg, Xterm, and Xfce4
+sudo xbps-install -Sy xorg xterm xfce4
 ```
 Installing full Xorg pulls all X11 packages, including several X11 bitmap fonts, which are necessary for most users.
 
 ### Install and configure the login manager
+First we've to enable the dbus service before using lightdm. lightdm and lightdm-gtk-greeter rely's on dbus to communicate.\
+For installation and configration, check out the [dbus](#dbus) section.
+
 For login manager, I personally like lightdm, as it's minimal and have a pretty GUI style.
 ```sh
 # Invoke these instructions to get it
@@ -109,12 +112,12 @@ By default network manager will not be configured, so we have to.
 # Install network manager applet
 sudo xbps-install -Sy network-manager-applet
 
-# Create a symbolic link of network manager in /var/service
+# Create a symbolic link of the network manager in /var/service
 sudo ln -s /etc/sv/NetworkManager /var/service
 ```
 
 ##### Disable bitmap fonts Firefox
-Without disabling bitmap fonts, Firefox fonts will appear like quite old style rough fonts (like in Windows XP).
+Without disabling bitmap fonts, Firefox fonts will appear like quite old-style rough fonts (like in Windows XP).
 ```sh
 sudo ln -s /usr/share/fontconfig/conf.avail/70-no-bitmaps.conf /etc/fonts/conf.d
 ```
@@ -126,7 +129,7 @@ Sometimes default timezone may not show your current time, even if you link your
 sudo xbps-install -S openntpd
 sudo ln -s /etc/sv/openntpd /var/service
 
-# Note: If openntpd unable to synchronize your localtime to Internet time, please use chrony instead
+# Note: If openntpd is unable to synchronize your local time to Internet time, please use chrony instead
 sudo xbps-remove -R openntpd # If you've already installed openntpd by following the previous step
 sudo xbps-install -S chrony
 sudo ln -s /etc/sv/chrony /var/service
@@ -167,7 +170,7 @@ sudo mount /dev/sdZ /media/delta
 Open thunar, and if you can see partitions or drives in the "Devices" section.\
 We have to make them permanent, so open `/etc/fstab` and address devices accordingly.
 ```sh
-# Run blkid to get UUID of these devices
+# Run blkid to get the UUID of these devices
 blkid
 
 # Copy the UUID and paste them in fstab with the following format
@@ -175,7 +178,7 @@ UUID=<COPIED_UUID> <MOUNTED_PATH> <FS_TYPE> defaults <BCK_OP FS_ORDER>
 
 # COPIED_UUID - The UUID you get from blkid (make sure to copy for those secondary drives only).
 # MOUNTED_PATH - The path where we mounted these devices first.
-# FS_TYPE - What filesystem those devices have? For example, ext4, btrfs, etc.
+# FS_TYPE - What filesystem do those devices have? For example, ext4, btrfs, etc.
 # BCK_OP - Enable backup or not (1 = Enabled, 0 = Disabled)
 # FS_ORDER - Should fsck check those devices (partitions or drives)? (1 = Enabled, 0 = Disabled)
 
@@ -200,14 +203,14 @@ sudo xbps-install -S webp-pixbuf-loader
 ```
 
 #### Change local ISP DNS to Cloudflare DNS (optional)
-Note: Recently, I'm noticing that several websites I can't load, more in the context, they just *hang* while my ISP's DNS server try to resolving them and at the end, its never get loaded. I assume my ISP did block those websites which you know is a complete worse senerio.
+Note: Recently, I'm noticing that several websites I can't load, more in context, they just *hang* while my ISP's DNS server tries to resolve them and in the end, they never get loaded. I assume my ISP did block those websites which you know is a completely worse scenario.
 ```sh
 # Temporary change DNS server
 echo "nameserver=1.1.1.1" | sudo tee -a /etc/resolv.conf
 
 # Permannent change of the DNS server
 ## Open /etc/resolvconf.conf with vim and uncomment name_servers and after that change name_servers value to something like this.
-name_servers=1.1.1.1 
+name_servers=1.1.1.1
 ```
 Reboot your system.
 
@@ -230,7 +233,7 @@ Open `/etc/default/grub` with Vim (or nano) and append the following parameter
 sudo vim /etc/default/grub
 
 # Disable watchdog in grub
-GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog" # Remember to append it after first parameter and separate them with a space
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog" # Remember to append it after the first parameter and separate them with a space
 # Save and exit
 ```
 Now update the grub config with
@@ -261,6 +264,6 @@ sudo xbps-install -Suy
 ```
 
 ```sh
-# You can omit any one, two, or whole
+# Programs I *may* use
 sudo xbps-install -S 7zip element-desktop firefox fish-shell flameshot git github-cli gparted htop krita lightdm-gtk-greeter-settings man-pages-devel mpv newsboat pass qView sakura vscode unzip xtools
 ```

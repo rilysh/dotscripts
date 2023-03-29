@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Firefox
+Comment=Browser the web
+GenericName=Firefox
+Keywords=internet;browser;net;web;www;
+Exec=/opt/firefox/firefox %u
+Icon=/opt/firefox/browser/chrome/icons/default/default64.png
+Terminal=false
+Type=Application
+Categories=WebBrowser;
