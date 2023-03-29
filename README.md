@@ -238,7 +238,7 @@ GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog" # Remember to append it after
 ```
 Now update the grub config with
 ```sh
-sudo grub-mkconfig
+sudo update-grub
 ```
 ### Install other software
 We got DE now we need several other software.\
