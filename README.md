@@ -224,7 +224,13 @@ echo "ignorepkg=btrfs-progs" | sudo tee /etc/xbps.d/10-ignores.conf
 sudo xbps-remove -Ry btrfs-progs lvm2
 ```
 
-##### Disable watchdog (advanced)
+##### Disable logging, watchdog, and timer (advanced)
+Logging is used to log any warnings and errors that happen on boot and when you're running the system. Disabling this will stop all this logging, however, several Linux kernel logging will still be there.
+
+Udev's purpose is to identify systems based on their properties, vendor ID, device ID, and such. Udev will log whenever a new device is found or if you mount, unmount, or remount any device. Disabling it will stop Udev from logging these actions.
+
+`no_timer_check` disable the Linux kernel from logging timing, counting operations, and several others. Although it might be useful in certain cases in most cases (especially for home users) it's pretty much useless.
+
 Watchdog is used to check if the system is frozen so the OS will reboot eventually. However, this feature is unnecessary for a desktop or laptop user, as we'll likely reboot if something happens.
 
 Open `/etc/default/grub` with Vim (or nano) and append the following parameter
@@ -232,8 +238,8 @@ Open `/etc/default/grub` with Vim (or nano) and append the following parameter
 # Using vim
 sudo vim /etc/default/grub
 
-# Disable watchdog in grub
-GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 nowatchdog" # Remember to append it after the first parameter and separate them with a space
+# Disable logging, watchdog, and periodic timer
+GRUB_CMDLINE_LINUX_DEFAULT="loglevel=0 udev.log_level=0 nowatchdog no_timer_check" # Remember to append it after the first parameter and separate them with a space
 # Save and exit
 ```
 Now update the grub config with
